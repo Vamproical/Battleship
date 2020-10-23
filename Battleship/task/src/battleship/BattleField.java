@@ -1,11 +1,14 @@
 package battleship;
 
+import battleship.ships.*;
+
 import java.util.Scanner;
 
 public class BattleField {
     private final char[][] field;
     private final char[] alphabet = new char[]{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'};
     private final Scanner scanner;
+    private Ship[] ships;
 
     public BattleField() {
         scanner = new Scanner(System.in);
@@ -19,34 +22,92 @@ public class BattleField {
 
     public void game() {
         printField();
+        ships = new Ship[5];
+        ships[0] = new AirCraftShip();
+        ships[1] = new BattleShip();
+        ships[2] = new SubmarineShip();
+        ships[3] = new CruiserShip();
+        ships[4] = new DestroyerShip();
 
         System.out.println("Enter the coordinates of the Aircraft Carrier (5 cells):");
-        buildShip(5);
+        System.out.println();
+        ships[0].setPlaced();
+        buildShip(ships[0]);
 
         System.out.println("Enter the coordinates of the Battleship (4 cells):");
-        buildShip(4);
+        System.out.println();
+        ships[1].setPlaced();
+        buildShip(ships[1]);
 
         System.out.println("Enter the coordinates of the Submarine (3 cells):");
-        buildShip(3);
+        System.out.println();
+        ships[2].setPlaced();
+        buildShip(ships[2]);
 
         System.out.println("Enter the coordinates of the Cruiser (3 cells):");
-        buildShip(3);
+        System.out.println();
+        ships[3].setPlaced();
+        buildShip(ships[3]);
 
         System.out.println("Enter the coordinates of the Destroyer (2 cells):");
-        buildShip(2);
+        System.out.println();
+        ships[4].setPlaced();
+        buildShip(ships[4]);
+
+        System.out.println("The game starts!");
+        System.out.println();
+        printField();
+        System.out.println();
+        System.out.println("Take a shot!");
+        shots();
     }
 
-    private void buildShip(int length) {
+    public void shots() {
+        String coordinate = scanner.next();
+        System.out.println();
+        if (!checkCorrectInput(coordinate)) {
+            System.out.println("Error! You entered the wrong coordinates! Try again:");
+            shots();
+        } else {
+            Point shot = parseCoordinate(coordinate);
+            if (field[shot.getX()][shot.getY()] == 'O') {
+                field[shot.getX()][shot.getY()] = 'X';
+                System.out.println();
+                printField();
+                System.out.println();
+                System.out.println("You hit a ship!");
+            } else {
+                field[shot.getX()][shot.getY()] = 'M';
+                System.out.println();
+                printField();
+                System.out.println();
+                System.out.println("You missed!");
+            }
+        }
+    }
+
+    private boolean checkCorrectInput(String coordinate) {
+        String coordinateX = coordinate.substring(0, 1);
+        String coordinateY = coordinate.substring(1);
+        int x = findPosition(coordinateX.charAt(0));
+        int y = Integer.parseInt(coordinateY);
+        return x != -1 && (y >= 1 && y <= 10);
+    }
+
+    private void buildShip(Ship ship) {
         String firstCoordinate = scanner.next();
         String secondCoordinate = scanner.next();
+        System.out.println();
         Point shipPartOne = parseCoordinate(firstCoordinate);
         Point shipPartTwo = parseCoordinate(secondCoordinate);
         checkOrder(shipPartOne, shipPartTwo);
-        if (checkError(shipPartOne, shipPartTwo, length)) {
+        if (checkError(shipPartOne, shipPartTwo, ship)) {
             setShip(shipPartOne, shipPartTwo);
+            ship.setBegin(shipPartOne);
+            ship.setEnd(shipPartTwo);
             printField();
         } else {
-            buildShip(length);
+            buildShip(ship);
         }
 
     }
@@ -62,37 +123,55 @@ public class BattleField {
         }
     }
 
-    private boolean checkError(Point shipPartOne, Point shipPartTwo, int length) {
-        if (isShipBiggerThanShould(shipPartOne, shipPartTwo, length) || isShipLesserThanShould(shipPartOne, shipPartTwo, length)) {
-            System.out.println("Error! Wrong length of the %s! Try again: ");
+    private boolean checkError(Point shipPartOne, Point shipPartTwo, Ship ship) {
+        if (isShipBiggerThanShould(shipPartOne, shipPartTwo, ship) || isShipLesserThanShould(shipPartOne, shipPartTwo, ship)) {
+            System.out.printf("Error! Wrong length of the %s! Try again: \n", ship.getName());
             return false;
         } else if (shipPartOne.getX() != shipPartTwo.getX() && shipPartOne.getY() != shipPartTwo.getY()) {
-            System.out.printf("Error! Wrong ship location! Try again:%n");
+            System.out.println("Error! Wrong ship location! Try again: ");
             return false;
-        } else if (!checkBorders(shipPartOne, shipPartTwo)) {
-            System.out.println("Error! You placed it too close to another one. Try again:");
+        } else if (!checkBorders(shipPartOne, shipPartTwo, ship)) {
+            System.out.println("Error! You placed it too close to another one. Try again: ");
             return false;
         }
         return true;
     }
 
-    private boolean isShipBiggerThanShould(Point firstPoint, Point secondPoint, int ship) {
-        return (Math.abs(secondPoint.getX() - firstPoint.getX()) > ship - 1)
-                || (Math.abs(secondPoint.getY() - firstPoint.getY()) > ship - 1);
+    private boolean isShipBiggerThanShould(Point firstPoint, Point secondPoint, Ship ship) {
+        return (Math.abs(secondPoint.getX() - firstPoint.getX()) > ship.getSize() - 1)
+                || (Math.abs(secondPoint.getY() - firstPoint.getY()) > ship.getSize() - 1);
     }
 
-    private boolean isShipLesserThanShould(Point firstPoint, Point secondPoint, int ship) {
-        return (Math.abs(secondPoint.getX() - firstPoint.getX()) < ship - 1)
-                && (Math.abs(secondPoint.getY() - firstPoint.getY()) < ship - 1);
+    private boolean isShipLesserThanShould(Point firstPoint, Point secondPoint, Ship ship) {
+        return (Math.abs(secondPoint.getX() - firstPoint.getX()) < ship.getSize() - 1)
+                && (Math.abs(secondPoint.getY() - firstPoint.getY()) < ship.getSize() - 1);
     }
 
-    private boolean checkBorders(Point firstPoint, Point secondPoint) {
-        Point leftUpperCorner = getLeftUpperCornerOfCheckingArea(firstPoint);
-        Point bottomRightCorner = getBottomRightCornerOfCheckingArea(secondPoint);
-        for (int i = leftUpperCorner.getY(); i <= bottomRightCorner.getY(); i++) {
-            for (int j = leftUpperCorner.getX(); j <= bottomRightCorner.getX(); j++) {
-                if (!(field[i][j] == '~')) {
-                    System.out.println(i + " " + j + " " + field[i][j]);
+    private boolean checkBorders(Point firstPoint, Point secondPoint, Ship shipPlaced) {
+        /*for (Ship ship : ships) {
+            if (ship != shipPlaced && ship.isPlaced()) {
+                for (int i = firstPoint.getX() - 1; i <= secondPoint.getX() + 1; i++) {
+                    for (int j = firstPoint.getY() - 1; j <= secondPoint.getY() + 1; j++) {
+                        if ((i == ship.getBegin().getX() && j == ship.getEnd().getX()) ||
+                                (j == ship.getBegin().getY() && i == ship.getEnd().getY())) {
+                            System.out.println(i + " " + ship.getBegin().getX() + " " + j + " " + ship.getEnd().getX());
+                            System.out.println(i + " " + ship.getBegin().getY() + " " + j + " " + ship.getEnd().getY());
+                            return false;
+                        }
+                    }
+                }
+            }*/
+        int minRow = Math.min(firstPoint.getX(), secondPoint.getX());
+        int minCol = Math.min(firstPoint.getY(), secondPoint.getY());
+        int maxRow = Math.max(firstPoint.getX(), secondPoint.getX());
+        int maxCol = Math.max(firstPoint.getY(), secondPoint.getY());
+        minRow = minRow == 0 ? 0 : minRow - 1;
+        minCol = minCol == 0 ? 0 : minCol - 1;
+        maxRow = maxRow == 9 ? 9 : maxRow + 1;
+        maxCol = maxCol == 9 ? 9 : maxCol + 1;
+        for (int i = minRow; i <= maxRow; i++) {
+            for (int j = minCol; j <= maxCol; j++) {
+                if (field[i][j] != '~') {
                     return false;
                 }
             }
@@ -100,27 +179,13 @@ public class BattleField {
         return true;
     }
 
-    private Point getLeftUpperCornerOfCheckingArea(Point point) {
-        int leftUpperCornerX = point.getX() == 0 ? 0 : point.getX() - 1;
-        int leftUpperCornerY = point.getY() == 0 ? 0 : point.getY() - 1;
-        return new Point(leftUpperCornerX, leftUpperCornerY);
-    }
-
-    private Point getBottomRightCornerOfCheckingArea(Point point) {
-        int bottomRightCornerX = point.getX() == 10 - 1 ? point.getX() : point.getX() + 1;
-        int bottomRightCornerY = point.getY() == 10 - 1 ? point.getY() : point.getY() + 1;
-        return new Point(bottomRightCornerX, bottomRightCornerY);
-    }
 
     private Point parseCoordinate(String coordinate) {
-        String[] coordinates = coordinate.split("");
+        String coordinateX = coordinate.substring(0, 1);
+        String coordinateY = coordinate.substring(1);
         Point firstCoordinate = new Point();
-        firstCoordinate.setX(findPosition(coordinates[0].charAt(0)));
-        if (coordinates.length == 3) {
-            firstCoordinate.setY(Integer.parseInt(coordinates[1] + coordinates[2]) - 1);
-        } else {
-            firstCoordinate.setY(Integer.parseInt(coordinates[1]) - 1);
-        }
+        firstCoordinate.setX(findPosition(coordinateX.charAt(0)));
+        firstCoordinate.setY(Integer.parseInt(coordinateY) - 1);
         return firstCoordinate;
     }
 
