@@ -8,7 +8,6 @@ public class BattleField {
     private final char[][] field;
     private final char[] alphabet = new char[]{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'};
     private final Scanner scanner;
-    private Ship[] ships;
 
     public BattleField() {
         scanner = new Scanner(System.in);
@@ -22,7 +21,7 @@ public class BattleField {
 
     public void game() {
         printField();
-        ships = new Ship[5];
+        Ship[] ships = new Ship[5];
         ships[0] = new AirCraftShip();
         ships[1] = new BattleShip();
         ships[2] = new SubmarineShip();
@@ -56,7 +55,7 @@ public class BattleField {
 
         System.out.println("The game starts!");
         System.out.println();
-        printField();
+        printFieldForBattle();
         System.out.println();
         System.out.println("Take a shot!");
         shots();
@@ -73,16 +72,18 @@ public class BattleField {
             if (field[shot.getX()][shot.getY()] == 'O') {
                 field[shot.getX()][shot.getY()] = 'X';
                 System.out.println();
-                printField();
+                printFieldForBattle();
                 System.out.println();
                 System.out.println("You hit a ship!");
             } else {
                 field[shot.getX()][shot.getY()] = 'M';
                 System.out.println();
-                printField();
+                printFieldForBattle();
                 System.out.println();
                 System.out.println("You missed!");
             }
+            System.out.println();
+            printField();
         }
     }
 
@@ -130,7 +131,7 @@ public class BattleField {
         } else if (shipPartOne.getX() != shipPartTwo.getX() && shipPartOne.getY() != shipPartTwo.getY()) {
             System.out.println("Error! Wrong ship location! Try again: ");
             return false;
-        } else if (!checkBorders(shipPartOne, shipPartTwo, ship)) {
+        } else if (!checkBorders(shipPartOne, shipPartTwo)) {
             System.out.println("Error! You placed it too close to another one. Try again: ");
             return false;
         }
@@ -147,20 +148,7 @@ public class BattleField {
                 && (Math.abs(secondPoint.getY() - firstPoint.getY()) < ship.getSize() - 1);
     }
 
-    private boolean checkBorders(Point firstPoint, Point secondPoint, Ship shipPlaced) {
-        /*for (Ship ship : ships) {
-            if (ship != shipPlaced && ship.isPlaced()) {
-                for (int i = firstPoint.getX() - 1; i <= secondPoint.getX() + 1; i++) {
-                    for (int j = firstPoint.getY() - 1; j <= secondPoint.getY() + 1; j++) {
-                        if ((i == ship.getBegin().getX() && j == ship.getEnd().getX()) ||
-                                (j == ship.getBegin().getY() && i == ship.getEnd().getY())) {
-                            System.out.println(i + " " + ship.getBegin().getX() + " " + j + " " + ship.getEnd().getX());
-                            System.out.println(i + " " + ship.getBegin().getY() + " " + j + " " + ship.getEnd().getY());
-                            return false;
-                        }
-                    }
-                }
-            }*/
+    private boolean checkBorders(Point firstPoint, Point secondPoint) {
         int minRow = Math.min(firstPoint.getX(), secondPoint.getX());
         int minCol = Math.min(firstPoint.getY(), secondPoint.getY());
         int maxRow = Math.max(firstPoint.getX(), secondPoint.getX());
@@ -216,6 +204,22 @@ public class BattleField {
             System.out.print(alphabet[i] + " ");
             for (int j = 0; j < 10; j++) {
                 System.out.print(field[i][j] + " ");
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+
+    private void printFieldForBattle() {
+        System.out.println("  1 2 3 4 5 6 7 8 9 10");
+        for (int i = 0; i < 10; i++) {
+            System.out.print(alphabet[i] + " ");
+            for (int j = 0; j < 10; j++) {
+                if (field[i][j] == 'O') {
+                    System.out.print("~" + " ");
+                } else {
+                    System.out.print(field[i][j] + " ");
+                }
             }
             System.out.println();
         }
