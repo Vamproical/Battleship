@@ -2,89 +2,61 @@ package battleship;
 
 import battleship.ships.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class BattleField {
-    private final char[][] field;
+    private final char[][] gameBoard;
+    private final char[][] fightBoard;
     private final char[] alphabet = new char[]{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'};
     private final Scanner scanner;
+    private List<Ship> ships;
 
     public BattleField() {
         scanner = new Scanner(System.in);
-        field = new char[10][10];
+        gameBoard = new char[10][10];
+        fightBoard = new char[10][10];
+        fillBoard(gameBoard);
+        fillBoard(fightBoard);
+    }
+
+    private void fillBoard(char[][] board) {
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
-                field[i][j] = '~';
+                board[i][j] = '~';
             }
         }
     }
 
-    public void game() {
+    public void setShips() {
         printField();
-        Ship[] ships = new Ship[5];
-        ships[0] = new AirCraftShip();
-        ships[1] = new BattleShip();
-        ships[2] = new SubmarineShip();
-        ships[3] = new CruiserShip();
-        ships[4] = new DestroyerShip();
+        ships = new ArrayList<>();
+        ships.add(new AirCraftShip());
+        ships.add(new BattleShip());
+        ships.add(new SubmarineShip());
+        ships.add(new CruiserShip());
+        ships.add(new DestroyerShip());
 
         System.out.println("Enter the coordinates of the Aircraft Carrier (5 cells):");
         System.out.println();
-        ships[0].setPlaced();
-        buildShip(ships[0]);
+        buildShip(ships.get(0));
 
         System.out.println("Enter the coordinates of the Battleship (4 cells):");
         System.out.println();
-        ships[1].setPlaced();
-        buildShip(ships[1]);
+        buildShip(ships.get(1));
 
         System.out.println("Enter the coordinates of the Submarine (3 cells):");
         System.out.println();
-        ships[2].setPlaced();
-        buildShip(ships[2]);
+        buildShip(ships.get(2));
 
         System.out.println("Enter the coordinates of the Cruiser (3 cells):");
         System.out.println();
-        ships[3].setPlaced();
-        buildShip(ships[3]);
+        buildShip(ships.get(3));
 
         System.out.println("Enter the coordinates of the Destroyer (2 cells):");
         System.out.println();
-        ships[4].setPlaced();
-        buildShip(ships[4]);
-
-        System.out.println("The game starts!");
-        System.out.println();
-        printFieldForBattle();
-        System.out.println();
-        System.out.println("Take a shot!");
-        shots();
-    }
-
-    public void shots() {
-        String coordinate = scanner.next();
-        System.out.println();
-        if (!checkCorrectInput(coordinate)) {
-            System.out.println("Error! You entered the wrong coordinates! Try again:");
-            shots();
-        } else {
-            Point shot = parseCoordinate(coordinate);
-            if (field[shot.getX()][shot.getY()] == 'O') {
-                field[shot.getX()][shot.getY()] = 'X';
-                System.out.println();
-                printFieldForBattle();
-                System.out.println();
-                System.out.println("You hit a ship!");
-            } else {
-                field[shot.getX()][shot.getY()] = 'M';
-                System.out.println();
-                printFieldForBattle();
-                System.out.println();
-                System.out.println("You missed!");
-            }
-            System.out.println();
-            printField();
-        }
+        buildShip(ships.get(4));
     }
 
     private boolean checkCorrectInput(String coordinate) {
@@ -92,7 +64,7 @@ public class BattleField {
         String coordinateY = coordinate.substring(1);
         int x = findPosition(coordinateX.charAt(0));
         int y = Integer.parseInt(coordinateY);
-        return x != -1 && (y >= 1 && y <= 10);
+        return x == -1 || (y < 1 || y > 10);
     }
 
     private void buildShip(Ship ship) {
@@ -159,14 +131,13 @@ public class BattleField {
         maxCol = maxCol == 9 ? 9 : maxCol + 1;
         for (int i = minRow; i <= maxRow; i++) {
             for (int j = minCol; j <= maxCol; j++) {
-                if (field[i][j] != '~') {
+                if (gameBoard[i][j] != '~') {
                     return false;
                 }
             }
         }
         return true;
     }
-
 
     private Point parseCoordinate(String coordinate) {
         String coordinateX = coordinate.substring(0, 1);
@@ -189,11 +160,11 @@ public class BattleField {
     private void setShip(Point firstPart, Point secondPart) {
         if (firstPart.getX() == secondPart.getX()) {
             for (int j = firstPart.getY(); j <= secondPart.getY(); j++) {
-                field[firstPart.getX()][j] = 'O';
+                gameBoard[firstPart.getX()][j] = 'O';
             }
         } else if (firstPart.getY() == secondPart.getY()) {
             for (int i = firstPart.getX(); i <= secondPart.getX(); i++) {
-                field[i][firstPart.getY()] = 'O';
+                gameBoard[i][firstPart.getY()] = 'O';
             }
         }
     }
@@ -203,11 +174,10 @@ public class BattleField {
         for (int i = 0; i < 10; i++) {
             System.out.print(alphabet[i] + " ");
             for (int j = 0; j < 10; j++) {
-                System.out.print(field[i][j] + " ");
+                System.out.print(gameBoard[i][j] + " ");
             }
             System.out.println();
         }
-        System.out.println();
     }
 
     private void printFieldForBattle() {
@@ -215,14 +185,55 @@ public class BattleField {
         for (int i = 0; i < 10; i++) {
             System.out.print(alphabet[i] + " ");
             for (int j = 0; j < 10; j++) {
-                if (field[i][j] == 'O') {
-                    System.out.print("~" + " ");
-                } else {
-                    System.out.print(field[i][j] + " ");
-                }
+                System.out.print(fightBoard[i][j] + " ");
             }
             System.out.println();
         }
-        System.out.println();
     }
+
+    public boolean isShipDestroyed(char[][] enemyBoard, List<Ship> ships) {
+        for (Ship ship : ships) {
+            ship.checkIfDestroyed(enemyBoard);
+            if (ship.isDestroyed()) {
+                ships.remove(ship);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isShipsDestroyed() {
+        return ships.isEmpty();
+    }
+
+    public void printAllFields() {
+        printFieldForBattle();
+        System.out.println("---------------------");
+        printField();
+    }
+
+    public void takeAShot(BattleField enemyBoard) {
+        Scanner scanner = new Scanner(System.in);
+
+        String coordinate = scanner.nextLine();
+        if (checkCorrectInput(coordinate)) {
+            return;
+        }
+
+        Point shot = parseCoordinate(coordinate);
+        placeShotOnBoard(shot, enemyBoard);
+    }
+
+    private void placeShotOnBoard(Point shot, BattleField enemyBoard) {
+        if (enemyBoard.gameBoard[shot.getX()][shot.getY()] == '~') {
+            enemyBoard.gameBoard[shot.getX()][shot.getY()] = 'M';
+            fightBoard[shot.getX()][shot.getY()] = 'M';
+            System.out.println("You missed!");
+        } else {
+            enemyBoard.gameBoard[shot.getX()][shot.getY()] = 'X';
+            fightBoard[shot.getX()][shot.getY()] = 'X';
+            System.out.println(isShipDestroyed(enemyBoard.gameBoard, enemyBoard.ships) ? "You sank a ship!" : "You hit a ship!");
+        }
+    }
+
 }

@@ -7,7 +7,7 @@ public class SubmarineShip implements Ship{
     private final static int sizeShip = 3;
     private Point begin;
     private Point end;
-    private boolean isPlaced;
+    private boolean isDestroyed;
     @Override
     public String getName() {
         return nameShip;
@@ -26,21 +26,27 @@ public class SubmarineShip implements Ship{
         this.end = end;
     }
 
-    public Point getBegin() {
-        return begin;
-    }
-
-    public Point getEnd() {
-        return end;
+    @Override
+    public void checkIfDestroyed(char[][] field) {
+        int result = 0;
+        if (begin.getX() == end.getX()) {
+            for (int j = begin.getY(); j <= end.getY(); j++) {
+                if (field[begin.getX()][j] == 'X') {
+                    ++result;
+                }
+            }
+        } else if (begin.getY() == end.getY()) {
+            for (int i = begin.getX(); i <= end.getX(); i++) {
+                if (field[i][begin.getY()] == 'X') {
+                    ++result;
+                }
+            }
+        }
+        isDestroyed = result == sizeShip;
     }
 
     @Override
-    public boolean isPlaced() {
-        return isPlaced;
-    }
-
-    @Override
-    public void setPlaced() {
-        isPlaced = true;
+    public boolean isDestroyed() {
+        return isDestroyed;
     }
 }
